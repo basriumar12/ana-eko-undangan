@@ -7,8 +7,9 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
   const audioRef = useRef(null);
   const widgetRef = useRef(null);
 
-  // SoundCloud embed track for Andmesh - Anugerah Terindah / Wedding Music
-  const soundcloudEmbedUrl = "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1913087072&color=%23c59b27&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false";
+  // SoundCloud search/track URL for Andmesh - Anugerah Terindah
+  const soundcloudTarget = encodeURIComponent('https://soundcloud.com/search?q=Andmesh%20Anugerah%20Terindah');
+  const soundcloudEmbedUrl = `https://w.soundcloud.com/player/?url=${soundcloudTarget}&color=%23c59b27&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false`;
 
   useEffect(() => {
     // Initialize SoundCloud Widget API when iframe is available
@@ -33,7 +34,7 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
     if (isAutoPlayRequested) {
       setIsPlaying(true);
       
-      // 1. Try playing SoundCloud Widget
+      // 1. Play SoundCloud Widget
       if (widgetRef.current) {
         try {
           widgetRef.current.play();
@@ -42,7 +43,7 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
         }
       }
 
-      // 2. Play HTML5 fallback audio directly for mobile Safari & Android Chrome
+      // 2. Play Native HTML5 audio for mobile Safari & Android Chrome
       if (audioRef.current) {
         audioRef.current.volume = 0.6;
         audioRef.current.play().catch(err => {
@@ -81,12 +82,13 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
 
   return (
     <>
-      {/* Fallback Native Audio for 100% Mobile Browser Compatibility */}
+      {/* Native Audio for Mobile Browsers */}
       <audio ref={audioRef} loop preload="auto">
+        <source src="/audio/bg-music.mp3" type="audio/mp3" />
         <source src="/audio/bg-music.wav" type="audio/wav" />
       </audio>
 
-      {/* SoundCloud Iframe Widget with Mobile API Integration */}
+      {/* SoundCloud Iframe Widget */}
       <iframe
         ref={iframeRef}
         id="sc-player"
