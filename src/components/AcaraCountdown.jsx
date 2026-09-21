@@ -35,7 +35,8 @@ export default function AcaraCountdown() {
     return () => clearInterval(timer);
   }, [targetDate]);
 
-  const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Perumahan Bintang Anugrah Jaya')}`;
+  // Exact Google Maps link provided by user
+  const mapSearchUrl = "https://maps.app.goo.gl/Yk4tsRjppnoun5WX8?g_st=aw";
 
   const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Akad Nikah Ana & Eko')}&dates=20260927T010000Z/20260927T040000Z&details=${encodeURIComponent('Pernikahan Ana Nur Wijayanti & Eko Rubiyanto')}&location=${encodeURIComponent('Perumahan Bintang Anugrah Jaya')}`;
 
@@ -129,7 +130,7 @@ export default function AcaraCountdown() {
               href={mapSearchUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3 bg-[#c59b27] hover:bg-[#a87e1a] text-white rounded-full font-medium shadow-md flex items-center justify-center gap-2 text-xs md:text-sm transition-all"
+              className="px-6 py-3 bg-[#c59b27] hover:bg-[#a87e1a] text-white rounded-full font-medium shadow-md flex items-center justify-center gap-2 text-xs md:text-sm transition-all cursor-pointer"
             >
               <Navigation className="w-4 h-4" />
               Petunjuk Lokasi (Google Maps)
@@ -139,7 +140,7 @@ export default function AcaraCountdown() {
               href={googleCalendarUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3 bg-[#fdfbf7] border border-[#c59b27]/40 text-[#886214] hover:bg-[#f7f0df] rounded-full font-medium flex items-center justify-center gap-2 text-xs md:text-sm transition-all"
+              className="px-6 py-3 bg-[#fdfbf7] border border-[#c59b27]/40 text-[#886214] hover:bg-[#f7f0df] rounded-full font-medium flex items-center justify-center gap-2 text-xs md:text-sm transition-all cursor-pointer"
             >
               <ExternalLink className="w-4 h-4" />
               Simpan ke Kalender
