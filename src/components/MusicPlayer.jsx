@@ -3,104 +3,47 @@ import { Music, Disc } from 'lucide-react';
 
 export default function MusicPlayer({ isAutoPlayRequested }) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const iframeRef = useRef(null);
   const audioRef = useRef(null);
-  const widgetRef = useRef(null);
-
-  // SoundCloud search/track URL for Andmesh - Anugerah Terindah
-  const soundcloudTarget = encodeURIComponent('https://soundcloud.com/search?q=Andmesh%20Anugerah%20Terindah');
-  const soundcloudEmbedUrl = `https://w.soundcloud.com/player/?url=${soundcloudTarget}&color=%23c59b27&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false`;
 
   useEffect(() => {
-    // Initialize SoundCloud Widget API when iframe is available
-    if (iframeRef.current && window.SC && window.SC.Widget) {
-      try {
-        const widget = window.SC.Widget(iframeRef.current);
-        widgetRef.current = widget;
-        
-        widget.bind(window.SC.Widget.Events.READY, () => {
-          if (isAutoPlayRequested) {
-            widget.play();
+    if (isAutoPlayRequested && audioRef.current) {
+      audioRef.current.volume = 0.7;
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
             setIsPlaying(true);
-          }
-        });
-      } catch (e) {
-        console.warn('SC Widget init error:', e);
-      }
-    }
-  }, [iframeRef.current]);
-
-  useEffect(() => {
-    if (isAutoPlayRequested) {
-      setIsPlaying(true);
-      
-      // 1. Play SoundCloud Widget
-      if (widgetRef.current) {
-        try {
-          widgetRef.current.play();
-        } catch (e) {
-          console.log('Widget play error:', e);
-        }
-      }
-
-      // 2. Play Native HTML5 audio for mobile Safari & Android Chrome
-      if (audioRef.current) {
-        audioRef.current.volume = 0.6;
-        audioRef.current.play().catch(err => {
-          console.log('Mobile audio play info:', err);
-        });
+          })
+          .catch(err => {
+            console.log('Autoplay playback info:', err);
+          });
       }
     }
   }, [isAutoPlayRequested]);
 
   const togglePlay = () => {
-    const nextState = !isPlaying;
-    setIsPlaying(nextState);
+    if (!audioRef.current) return;
 
-    // Toggle SoundCloud widget
-    if (widgetRef.current) {
-      try {
-        if (nextState) {
-          widgetRef.current.play();
-        } else {
-          widgetRef.current.pause();
-        }
-      } catch (e) {
-        console.warn('Widget toggle error:', e);
-      }
-    }
-
-    // Toggle HTML5 Audio element
-    if (audioRef.current) {
-      if (nextState) {
-        audioRef.current.play().catch(() => {});
-      } else {
-        audioRef.current.pause();
-      }
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.volume = 0.7;
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch(err => {
+        console.log('Play error:', err);
+      });
     }
   };
 
   return (
     <>
-      {/* Native Audio for Mobile Browsers */}
+      {/* HTML5 Native Audio using local user uploaded anmesh.mp3 */}
       <audio ref={audioRef} loop preload="auto">
+        <source src="/audio/anmesh.mp3" type="audio/mp3" />
         <source src="/audio/bg-music.mp3" type="audio/mp3" />
-        <source src="/audio/bg-music.wav" type="audio/wav" />
       </audio>
-
-      {/* SoundCloud Iframe Widget */}
-      <iframe
-        ref={iframeRef}
-        id="sc-player"
-        width="100%"
-        height="166"
-        scrolling="no"
-        frameBorder="no"
-        allow="autoplay"
-        src={soundcloudEmbedUrl}
-        className="fixed -bottom-96 -left-96 opacity-0 pointer-events-none z-0"
-        title="Andmesh - Anugerah Terindah"
-      />
 
       {/* Floating Music Toggle Button */}
       <div className="fixed bottom-6 left-6 z-40 flex items-center gap-3">
