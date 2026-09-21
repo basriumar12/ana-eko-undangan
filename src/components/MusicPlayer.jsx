@@ -6,8 +6,8 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
   const iframeRef = useRef(null);
   const audioRef = useRef(null);
 
-  // SoundCloud embed track ID for Batas Senja - Nanti Kita Seperti Ini
-  const soundcloudTrackId = '1913087072';
+  // SoundCloud embed track ID for Shane Filan - Beautiful In White (Track ID: 36499359)
+  const soundcloudTrackId = '36499359';
   const soundcloudEmbedUrl = `https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/${soundcloudTrackId}&color=%23c59b27&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false`;
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
         <source src="/audio/bg-music.wav" type="audio/wav" />
       </audio>
 
-      {/* SoundCloud Widget Embed Frame (Hidden / Auto-playing when unlocked) */}
+      {/* SoundCloud Widget Embed Frame */}
       {isAutoPlayRequested && isPlaying && (
         <iframe
           ref={iframeRef}
@@ -52,7 +52,7 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
           allow="autoplay"
           src={soundcloudEmbedUrl}
           className="hidden"
-          title="Batas Senja - Nanti Kita Seperti Ini"
+          title="Shane Filan - Beautiful In White"
         />
       )}
 
@@ -65,7 +65,7 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
               ? 'bg-gradient-to-r from-[#c59b27] to-[#a87e1a] text-white animate-spin-slow ring-4 ring-[#c59b27]/20'
               : 'bg-white/90 text-[#886214] hover:bg-white'
           }`}
-          title={isPlaying ? 'Matikan Musik' : 'Putar Musik (Batas Senja - Nanti Kita Seperti Ini)'}
+          title={isPlaying ? 'Matikan Musik' : 'Putar Musik (Shane Filan - Beautiful In White)'}
         >
           {isPlaying ? (
             <Disc className="w-6 h-6 animate-spin" />
@@ -79,8 +79,8 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
           <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
             Background Music
           </span>
-          <span className="text-xs font-bold text-[#886214] truncate max-w-[170px]">
-            Batas Senja - Nanti Kita Seperti Ini
+          <span className="text-xs font-bold text-[#886214] truncate max-w-[180px]">
+            Beautiful In White - Shane Filan
           </span>
         </div>
       </div>
