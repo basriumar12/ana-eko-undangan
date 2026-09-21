@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link2, Copy, Send, X, Plus, Trash2, FileSpreadsheet, Check } from 'lucide-react';
+import { Link2, Copy, Send, X, Plus, FileSpreadsheet, Check, ExternalLink } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-export default function GuestLinkGenerator({ isOpen, onClose }) {
-  const [namesInput, setNamesInput] = useState('Bapak Ahmad\nIbu Rina\nSaudara Budi');
+export default function GuestLinkGenerator({ isOpen, onClose, isStandalonePage = false }) {
+  const [namesInput, setNamesInput] = useState('Bapak Ahmad & Keluarga\nIbu Rina\nSaudara Budi');
   const [generatedList, setGeneratedList] = useState([]);
   const [copiedIndex, setCopiedIndex] = useState(null);
 
-  const baseUrl = window.location.origin + window.location.pathname;
+  // Clean root domain URL for guest recipients (stripping /admin or ?mode=admin)
+  const getBaseGuestUrl = () => {
+    const origin = window.location.origin;
+    let path = window.location.pathname.replace(/\/admin\/?$/, '');
+    if (!path.startsWith('/')) path = '/' + path;
+    if (!path.endsWith('/')) path = path + '/';
+    return origin + (path === '/' ? '' : path);
+  };
 
   const handleGenerate = () => {
+    const baseUrl = getBaseGuestUrl();
+
     const list = namesInput
       .split('\n')
       .map(n => n.trim())
@@ -53,6 +62,113 @@ export default function GuestLinkGenerator({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
+  const content = (
+    <div className="p-6 space-y-6">
+      <div className="bg-[#fdfbf7] p-4 rounded-2xl border border-[#e2c77d]/40 flex items-center justify-between">
+        <div className="text-xs text-[#886214]">
+          <span className="font-bold">💡 Petunjuk Admin:</span> Masukkan daftar nama tamu di bawah ini. Hasil link yang dibuat akan mengarah ke alamat undangan penerima (`/?to=Nama+Tamu`).
+        </div>
+      </div>
+
+      {/* Input TextArea */}
+      <div>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">
+          Daftar Nama Tamu (Satu Nama per Baris)
+        </label>
+        <textarea
+          rows={5}
+          value={namesInput}
+          onChange={(e) => setNamesInput(e.target.value)}
+          placeholder="Contoh:&#10;Bapak Budi & Keluarga&#10;Ibu Siti&#10;Mas Dion"
+          className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-[#c59b27] text-sm resize-none font-mono"
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={handleGenerate}
+          className="px-6 py-2.5 bg-[#c59b27] hover:bg-[#a87e1a] text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          Generate Link Undangan Tamu
+        </button>
+
+        {generatedList.length > 0 && (
+          <button
+            onClick={handleExportExcel}
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Export Excel Daftar Link
+          </button>
+        )}
+      </div>
+
+      {/* Result List */}
+      {generatedList.length > 0 && (
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            Hasil Link Undangan Tamu ({generatedList.length})
+          </h4>
+          {generatedList.map((item, idx) => (
+            <div 
+              key={idx}
+              className="p-3.5 bg-[#faf7f2] rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
+            >
+              <div>
+                <span className="font-bold text-gray-800 text-sm block">
+                  {item.name}
+                </span>
+                <a 
+                  href={item.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-[#c59b27] hover:underline font-mono text-[11px] truncate max-w-xs flex items-center gap-1 mt-0.5"
+                >
+                  <span>{item.url}</span>
+                  <ExternalLink className="w-3 h-3 shrink-0" />
+                </a>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => handleCopy(item.url, idx)}
+                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg flex items-center gap-1 hover:bg-gray-50 font-medium text-gray-700 cursor-pointer"
+                >
+                  {copiedIndex === idx ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700 text-[11px]">Tersalin</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-[#c59b27]" />
+                      <span>Copy Link</span>
+                    </>
+                  )}
+                </button>
+
+                <a
+                  href={item.waUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-1 font-medium"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Kirim WA</span>
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  if (isStandalonePage) {
+    return content;
+  }
+
   return (
     <AnimatePresence>
       <motion.div
@@ -77,105 +193,17 @@ export default function GuestLinkGenerator({ isOpen, onClose }) {
                 Input daftar nama tamu untuk membuat link khusus & pesan WhatsApp otomatis.
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="p-6 space-y-6">
-            
-            {/* Input TextArea */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">
-                Daftar Nama Tamu (Satu Nama per Baris)
-              </label>
-              <textarea
-                rows={4}
-                value={namesInput}
-                onChange={(e) => setNamesInput(e.target.value)}
-                placeholder="Contoh:&#10;Bapak Budi & Keluarga&#10;Ibu Siti&#10;Mas Dion"
-                className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:ring-2 focus:ring-[#c59b27] text-sm resize-none font-mono"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-3">
+            {onClose && (
               <button
-                onClick={handleGenerate}
-                className="px-6 py-2.5 bg-[#c59b27] hover:bg-[#a87e1a] text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-sm transition-all"
+                onClick={onClose}
+                className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
               >
-                <Plus className="w-4 h-4" />
-                Generate Link Tamu
+                <X className="w-5 h-5" />
               </button>
-
-              {generatedList.length > 0 && (
-                <button
-                  onClick={handleExportExcel}
-                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-sm transition-all"
-                >
-                  <FileSpreadsheet className="w-4 h-4" />
-                  Export Excel List Link
-                </button>
-              )}
-            </div>
-
-            {/* Result List */}
-            {generatedList.length > 0 && (
-              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                  Hasil Link Tamu ({generatedList.length})
-                </h4>
-                {generatedList.map((item, idx) => (
-                  <div 
-                    key={idx}
-                    className="p-3 bg-[#faf7f2] rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
-                  >
-                    <div>
-                      <span className="font-bold text-gray-800 text-sm block">
-                        {item.name}
-                      </span>
-                      <span className="text-gray-500 font-mono text-[11px] truncate max-w-xs block">
-                        {item.url}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => handleCopy(item.url, idx)}
-                        className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg flex items-center gap-1 hover:bg-gray-50 font-medium text-gray-700"
-                      >
-                        {copiedIndex === idx ? (
-                          <>
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="text-emerald-700 text-[11px]">Tersalin</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5 text-[#c59b27]" />
-                            <span>Copy Link</span>
-                          </>
-                        )}
-                      </button>
-
-                      <a
-                        href={item.waUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-1 font-medium"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        <span>Kirim WA</span>
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
-
           </div>
 
+          {content}
         </motion.div>
       </motion.div>
     </AnimatePresence>

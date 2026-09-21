@@ -9,30 +9,81 @@ import LoveStoryGallery from './components/LoveStoryGallery';
 import RsvpWishes from './components/RsvpWishes';
 import Footer from './components/Footer';
 import GuestLinkGenerator from './components/GuestLinkGenerator';
-import { Users } from 'lucide-react';
+import { Settings, Heart, Users, ArrowLeft } from 'lucide-react';
 
 export default function App() {
   const [guestName, setGuestName] = useState('');
   const [isInvitationOpen, setIsInvitationOpen] = useState(false);
-  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const [isAdminPage, setIsAdminPage] = useState(false);
   const [isMusicRequested, setIsMusicRequested] = useState(false);
 
   useEffect(() => {
-    // Parse URL parameter ?to=Nama+Tamu
-    const params = new URLSearchParams(window.location.search);
-    const toParam = params.get('to');
-    if (toParam) {
-      setGuestName(toParam);
-    }
+    const checkRoute = () => {
+      const path = window.location.pathname;
+      const params = new URLSearchParams(window.location.search);
+      
+      // Check if URL is for Admin (/admin or ?mode=admin or ?admin=true)
+      if (path.endsWith('/admin') || params.get('mode') === 'admin' || params.has('admin')) {
+        setIsAdminPage(true);
+      } else {
+        setIsAdminPage(false);
+        const toParam = params.get('to');
+        if (toParam) {
+          setGuestName(toParam);
+        }
+      }
+    };
+
+    checkRoute();
+    window.addEventListener('popstate', checkRoute);
+    return () => window.removeEventListener('popstate', checkRoute);
   }, []);
 
   const handleOpenInvitation = () => {
     setIsInvitationOpen(true);
     setIsMusicRequested(true);
-    // Smooth scroll to top of page
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // If user accesses Admin route (/admin or ?mode=admin)
+  if (isAdminPage) {
+    return (
+      <div className="min-h-screen bg-[#faf7f2] text-[#2c2c2c] p-4 sm:p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex items-center justify-between bg-white p-4 sm:p-6 rounded-3xl border border-[#e2c77d]/40 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#fdfbf7] border border-[#c59b27]/40 text-[#c59b27] flex items-center justify-center">
+                <Settings className="w-5 h-5 animate-spin-slow" />
+              </div>
+              <div>
+                <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#886214]">
+                  Panel Admin & Generator Link Tamu
+                </h1>
+                <p className="text-xs text-gray-500">
+                  Link Khusus Pengelola • Hasilkan link unik untuk setiap tamu penerima undangan
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="/"
+              className="px-4 py-2 bg-[#fdfbf7] hover:bg-[#f7f0df] border border-[#c59b27]/30 text-[#886214] rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Lihat Tampilan Undangan
+            </a>
+          </div>
+
+          {/* Embedded Guest Link Generator */}
+          <div className="bg-white rounded-3xl border border-[#e2c77d]/40 shadow-md overflow-hidden">
+            <GuestLinkGenerator isOpen={true} onClose={null} isStandalonePage={true} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Recipient / Guest View (Clean invitation experience)
   return (
     <div className="min-h-screen bg-[#faf7f2] relative text-[#2c2c2c] font-sans selection:bg-[#d4af37] selection:text-white">
       
@@ -56,24 +107,6 @@ export default function App() {
 
           {/* Background Music Control */}
           <MusicPlayer isAutoPlayRequested={isMusicRequested} />
-
-          {/* Guest Link Generator Floating Button */}
-          <div className="fixed bottom-6 right-6 z-40">
-            <button
-              onClick={() => setIsGeneratorOpen(true)}
-              className="px-4 py-3 rounded-full bg-gradient-to-r from-[#c59b27] to-[#886214] text-white shadow-xl hover:shadow-2xl flex items-center gap-2 text-xs font-semibold transition-all duration-300 hover:scale-105 border border-white/30 cursor-pointer"
-              title="Input Nama Tamu & Buat Link Undangan WhatsApp"
-            >
-              <Users className="w-4 h-4" />
-              <span>Input Tamu / Share WA</span>
-            </button>
-          </div>
-
-          {/* Guest Link Generator Modal */}
-          <GuestLinkGenerator
-            isOpen={isGeneratorOpen}
-            onClose={() => setIsGeneratorOpen(false)}
-          />
         </main>
       )}
 
