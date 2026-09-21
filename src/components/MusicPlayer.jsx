@@ -1,21 +1,52 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Music, Pause, Disc } from 'lucide-react';
+import { Music, Disc } from 'lucide-react';
 
 export default function MusicPlayer({ isAutoPlayRequested }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const iframeRef = useRef(null);
   const audioRef = useRef(null);
+  const widgetRef = useRef(null);
 
-  // SoundCloud embed track for Andmesh - Anugerah Terindah
-  const soundcloudTrackUrl = 'https%3A//soundcloud.com/search%3Fq%3DAdmesh%2520anugerah%2520terindah';
-  const soundcloudEmbedUrl = `https://w.soundcloud.com/player/?url=${soundcloudTrackUrl}&color=%23c59b27&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false`;
+  // SoundCloud embed track for Andmesh - Anugerah Terindah / Wedding Music
+  const soundcloudEmbedUrl = "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1913087072&color=%23c59b27&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false";
+
+  useEffect(() => {
+    // Initialize SoundCloud Widget API when iframe is available
+    if (iframeRef.current && window.SC && window.SC.Widget) {
+      try {
+        const widget = window.SC.Widget(iframeRef.current);
+        widgetRef.current = widget;
+        
+        widget.bind(window.SC.Widget.Events.READY, () => {
+          if (isAutoPlayRequested) {
+            widget.play();
+            setIsPlaying(true);
+          }
+        });
+      } catch (e) {
+        console.warn('SC Widget init error:', e);
+      }
+    }
+  }, [iframeRef.current]);
 
   useEffect(() => {
     if (isAutoPlayRequested) {
       setIsPlaying(true);
+      
+      // 1. Try playing SoundCloud Widget
+      if (widgetRef.current) {
+        try {
+          widgetRef.current.play();
+        } catch (e) {
+          console.log('Widget play error:', e);
+        }
+      }
+
+      // 2. Play HTML5 fallback audio directly for mobile Safari & Android Chrome
       if (audioRef.current) {
-        audioRef.current.play().catch(() => {
-          // SoundCloud iframe handles playback
+        audioRef.current.volume = 0.6;
+        audioRef.current.play().catch(err => {
+          console.log('Mobile audio play info:', err);
         });
       }
     }
@@ -25,9 +56,23 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
     const nextState = !isPlaying;
     setIsPlaying(nextState);
 
+    // Toggle SoundCloud widget
+    if (widgetRef.current) {
+      try {
+        if (nextState) {
+          widgetRef.current.play();
+        } else {
+          widgetRef.current.pause();
+        }
+      } catch (e) {
+        console.warn('Widget toggle error:', e);
+      }
+    }
+
+    // Toggle HTML5 Audio element
     if (audioRef.current) {
       if (nextState) {
-        audioRef.current.play().catch(e => console.log('Audio play error:', e));
+        audioRef.current.play().catch(() => {});
       } else {
         audioRef.current.pause();
       }
@@ -36,31 +81,30 @@ export default function MusicPlayer({ isAutoPlayRequested }) {
 
   return (
     <>
-      {/* HTML5 Audio with fallback audio */}
+      {/* Fallback Native Audio for 100% Mobile Browser Compatibility */}
       <audio ref={audioRef} loop preload="auto">
         <source src="/audio/bg-music.wav" type="audio/wav" />
       </audio>
 
-      {/* SoundCloud Widget Embed Frame */}
-      {isAutoPlayRequested && isPlaying && (
-        <iframe
-          ref={iframeRef}
-          width="0"
-          height="0"
-          scrolling="no"
-          frameBorder="no"
-          allow="autoplay"
-          src={soundcloudEmbedUrl}
-          className="hidden"
-          title="Andmesh - Anugerah Terindah"
-        />
-      )}
+      {/* SoundCloud Iframe Widget with Mobile API Integration */}
+      <iframe
+        ref={iframeRef}
+        id="sc-player"
+        width="100%"
+        height="166"
+        scrolling="no"
+        frameBorder="no"
+        allow="autoplay"
+        src={soundcloudEmbedUrl}
+        className="fixed -bottom-96 -left-96 opacity-0 pointer-events-none z-0"
+        title="Andmesh - Anugerah Terindah"
+      />
 
       {/* Floating Music Toggle Button */}
       <div className="fixed bottom-6 left-6 z-40 flex items-center gap-3">
         <button
           onClick={togglePlay}
-          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl border border-[#c59b27]/40 transition-all duration-300 ${
+          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl border border-[#c59b27]/40 transition-all duration-300 cursor-pointer ${
             isPlaying
               ? 'bg-gradient-to-r from-[#c59b27] to-[#a87e1a] text-white animate-spin-slow ring-4 ring-[#c59b27]/20'
               : 'bg-white/90 text-[#886214] hover:bg-white'
